@@ -32,6 +32,10 @@ arg="$@"
 #export DMLC_PS_ROOT_URI='127.0.0.1'
 export DMLC_PS_ROOT_URI='10.11.10.1'
 export DMLC_PS_ROOT_PORT=8001
+if [[ $DMLC_ROLE = 'scheduler' ]]
+then
+    export PS_VERBOSE=1
+fi
 if [[ $DMLC_ROLE = 'server' ]]
 then
     export HEAPPROFILE=./S${i}
