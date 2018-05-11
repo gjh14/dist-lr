@@ -19,3 +19,6 @@ cmake ..
 make -j4 
 cd ..
 
+cd examples
+python gen_data.py
+
