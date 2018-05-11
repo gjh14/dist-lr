@@ -33,6 +33,8 @@ public:
         samples_.push_back(Sample(feature, label));
         // std::cout << samples_.back().DebugInfo() << std::endl;
       }
+      
+      input.close();
   }
   virtual ~DataIter() {
   }

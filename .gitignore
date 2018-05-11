@@ -39,3 +39,7 @@
 # Generated dir
 /bin
 /build
+/examples/a9a-data/models
+/examples/a9a-data/test
+/examples/a9a-data/train
+

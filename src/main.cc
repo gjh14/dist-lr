@@ -48,7 +48,7 @@ private:
       if (weights.empty()) {
         std::cout << "Init weight" << std::endl;
         weights.resize(n);
-        for (int i = 0; i < n; ++i) {
+        for (size_t i = 0; i < n; ++i) {
           weights[i] = req_data.vals[i];
         }
         server->Response(req_meta);
@@ -58,7 +58,7 @@ private:
           merged.vals.resize(n, 0);
         }
 
-        for (int i = 0; i < n; ++i) {
+        for (size_t i = 0; i < n; ++i) {
           merged.vals[i] += req_data.vals[i];
         }
 

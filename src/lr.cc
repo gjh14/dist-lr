@@ -43,20 +43,23 @@ void LR::Train(DataIter& iter, int batch_size = 100) {
 void LR::Test(DataIter& iter, int num_iter) {
   PullWeight_(); // pull the latest weight
   std::vector<Sample> batch = iter.NextBatch(-1);
-  float acc = 0;
+  float acc = 0, loss = 0;
   for (size_t i = 0; i < batch.size(); ++i) {
     auto& sample = batch[i];
     if (Predict_(sample.GetFeature()) == sample.GetLabel()) {
       ++acc;
     }
+    double sig = Sigmoid_(sample.GetFeature());
+    loss += sample.GetLabel() * log(sig) + (1 - sample.GetLabel()) * log(1 - sig);
   }
+  
   time_t rawtime;
   time(&rawtime);
   struct tm* curr_time = localtime(&rawtime);
   std::cout << std::setw(2) << curr_time->tm_hour << ':' << std::setw(2)
     << curr_time->tm_min << ':' << std::setw(2) << curr_time->tm_sec
     << " Iteration "<< num_iter << ", accuracy: " << acc / batch.size()
-    << std::endl;
+    << ", logloss: "<< loss << std::endl;
 }
 
 std::vector<float> LR::GetWeight() {
