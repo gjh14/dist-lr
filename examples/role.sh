@@ -30,6 +30,7 @@ shift
 arg="$@"
 
 #export DMLC_PS_ROOT_URI='127.0.0.1'
+export DMLC_INTERFACE='br-flat-lan-1'
 export DMLC_PS_ROOT_URI='10.11.10.1'
 export DMLC_PS_ROOT_PORT=8001
 if [[ $DMLC_ROLE = 'scheduler' ]]
