@@ -24,12 +24,18 @@ public:
       while (std::getline(input, line)) {
         std::istringstream in(line);
         in >> buf;
-        int label = ToInt(buf) == 1 ? 1 : 0;
-        feature = std::vector<float>(num_feature_dim_, 0);
+        int label = ToInt(buf);
+        
+        /* feature = std::vector<float>(num_feature_dim_, 0);
         while (in >> buf) {
           auto ss = Split(buf, ':');
           feature[ToInt(ss[0]) - 1] = ToFloat(ss[1]);
-        }
+        } */
+        
+        feature = std::vector<float>();
+        while (in >> buf)
+          feature.push_back(ToFloat(buf) / 256);
+          
         samples_.push_back(Sample(feature, label));
         // std::cout << samples_.back().DebugInfo() << std::endl;
       }

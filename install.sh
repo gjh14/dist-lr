@@ -21,6 +21,8 @@ make -j4
 cd ..
 
 cd examples
+mkdir digit
+wget -P digit https://www.kaggle.com/c/3004/download/train.csv
 python gen_data.py
 python gen2.py
 
