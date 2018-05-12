@@ -9,7 +9,7 @@ def get_data(filename, is_shuffle=True):
     samples = []
     with open(filename, 'r') as f:
         for line in f:
-            samples.append(line)
+            samples.append(line.replace(',', ' '))
     samples = samples[1:]
     if is_shuffle:
         random.shuffle(samples)
