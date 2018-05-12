@@ -46,5 +46,8 @@ then
     export HEAPPROFILE=./W${i}
 fi
 
+sudo iftop -i br-flat-lan-1 -t > log &
 ${bin} ${arg}
+ps aux | grep "iftop" |grep -v grep| cut -c 9-15 | xargs sudo kill -9
+wait
 

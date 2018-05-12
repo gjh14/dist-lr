@@ -1,6 +1,7 @@
 sudo apt-get install cmake
 sudo apt-get install protobuf-compiler
 sudo apt-get install libprotobuf-dev
+sudo apt-get install iftop
 
 wget https://github.com/zeromq/libzmq/releases/download/v4.2.3/zeromq-4.2.3.tar.gz
 tar -xzvf zeromq-4.2.3.tar.gz
