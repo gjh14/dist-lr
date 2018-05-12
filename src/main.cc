@@ -149,13 +149,15 @@ void RunWorker() {
   int test_interval = distlr::ToInt(ps::Environment::Get()->find("TEST_INTERVAL"));
 
   for (int i = 0; i < num_iteration; ++i) {
-    std::string filename = root + "/train/part-00" + std::to_string(rank + 1);
-    distlr::DataIter iter(filename, num_feature_dim);
+    static std::string filename = root + "/train/part-00" + std::to_string(rank + 1);
+    static distlr::DataIter iter(filename, num_feature_dim);
+    iter.Init();
     lr.Train(iter, batch_size);
 
     if (rank == 0 and (i + 1) % test_interval == 0) {
-      std::string filename = root + "/test/part-001";
-      distlr::DataIter test_iter(filename, num_feature_dim);
+      static std::string filename = root + "/test/part-001";
+      static distlr::DataIter test_iter(filename, num_feature_dim);
+      test_iter.Init();
       lr.Test(test_iter, i + 1);
     }
   }
@@ -172,3 +174,4 @@ int main() {
   ps::Finalize();
   return 0;
 }
+

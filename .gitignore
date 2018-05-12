@@ -42,6 +42,9 @@
 /examples/a9a-data/models
 /examples/a9a-data/test
 /examples/a9a-data/train
+/examples/digit/models
+/examples/digit/test
+/examples/digit/train
 /example/core
 /example/log
 /zeromq-4.2.3

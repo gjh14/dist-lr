@@ -46,6 +46,7 @@ private:
 
   int random_state_;
 
+  std::vector<ps::Key> keys_;
   std::vector<float> weight_;
 
   ps::KVWorker<float>* kv_;

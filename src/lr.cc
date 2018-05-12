@@ -27,15 +27,15 @@ void LR::Train(DataIter& iter, int batch_size = 100) {
     PullWeight_();
 
     std::vector<float> grad(weight_.size());
-    for (size_t j = 0; j < weight_.size(); ++j) {
-      grad[j] = 0;
-      for (size_t i = 0; i < batch.size(); ++i) {
-        auto& sample = batch[i];
-        grad[j] += (Sigmoid_(sample.GetFeature()) - sample.GetLabel()) * sample.GetFeature(j);
-      }
-      grad[j] = 1. * grad[j] / batch.size() + C_ * weight_[j] / batch.size();
+    for (size_t i = 0; i < batch.size(); ++i) {
+      auto& sample = batch[i];  
+      double sig = Sigmoid_(sample.GetFeature());
+      for (size_t j = 0; j < weight_.size(); ++j)
+        grad[j] += (sig - sample.GetLabel()) * sample.GetFeature(j);
     }
-
+    for (size_t j = 0; j < weight_.size(); ++j)
+      grad[j] = 1. * grad[j] / batch.size() + C_ * weight_[j] / batch.size();
+        
     PushGradient_(grad);
   }
 }
@@ -90,6 +90,9 @@ std::string LR::DebugInfo() {
 }
 
 void LR::InitWeight_() {
+  keys_.resize(num_feature_dim_);
+  for (int i = 0; i < num_feature_dim_; ++i)
+    keys_[i] = i;
   srand(random_state_);
   weight_.resize(num_feature_dim_);
   for (size_t i = 0; i < weight_.size(); ++i) {
@@ -114,21 +117,11 @@ float LR::Sigmoid_(std::vector<float> feature) {
 }
 
 void LR::PullWeight_() {
-  std::vector<ps::Key> keys(num_feature_dim_);
-  std::vector<float> vals;
-  for (int i = 0; i < num_feature_dim_; ++i) {
-    keys[i] = i;
-  }
-  kv_->Wait(kv_->Pull(keys, &vals));
-  weight_ = vals;
+  kv_->Wait(kv_->Pull(keys_, &weight_));
 }
 
 void LR::PushGradient_(const std::vector<float>& grad) {
-  std::vector<ps::Key> keys(num_feature_dim_);
-  for (int i = 0; i < num_feature_dim_; ++i) {
-    keys[i] = i;
-  }
-  kv_->Wait(kv_->Push(keys, grad));
+  kv_->Wait(kv_->Push(keys_, grad));
 }
 
 } // namespace distlr

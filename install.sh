@@ -22,4 +22,5 @@ cd ..
 
 cd examples
 python gen_data.py
+python gen2.py
 

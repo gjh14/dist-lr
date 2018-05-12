@@ -15,7 +15,7 @@ export NUM_FEATURE_DIM=123
 export LEARNING_RATE=0.5
 export TEST_INTERVAL=10
 export SYNC_MODE=0
-export NUM_ITERATION=200
+export NUM_ITERATION=50
 export BATCH_SIZE=1 # -1 means take all examples in each iteration
 
 # worker/server/scheduler settings

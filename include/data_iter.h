@@ -38,7 +38,12 @@ public:
   }
   virtual ~DataIter() {
   }
-
+    
+  void Init() {
+    offset_ = 0;
+    round_end_ = false;
+  }
+  
   // batch_size = -1 means all samples
   std::vector<Sample> NextBatch(int batch_size=100) {
     if (batch_size < 0) {
