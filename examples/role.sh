@@ -46,6 +46,5 @@ then
     export HEAPPROFILE=./W${i}
 fi
 
-${bin} ${arg} &
-wait
+${bin} ${arg}
 

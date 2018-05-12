@@ -43,4 +43,5 @@
 /examples/a9a-data/test
 /examples/a9a-data/train
 /example/core
+/example/log
 /zeromq-4.2.3
