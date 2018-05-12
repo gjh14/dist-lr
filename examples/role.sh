@@ -16,7 +16,7 @@ export LEARNING_RATE=0.25
 export TEST_INTERVAL=10
 export SYNC_MODE=0
 export NUM_ITERATION=100
-export BATCH_SIZE=100 # -1 means take all examples in each iteration
+export BATCH_SIZE=500 # -1 means take all examples in each iteration
 
 # worker/server/scheduler settings
 export DMLC_ROLE=$1
