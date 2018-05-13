@@ -3,8 +3,8 @@
 
 ulimit -c unlimited
 
-if [ $# -lt 4 ]; then
-    echo "usage: $0 role udf num_servers num_workers bin [args..]"
+if [ $# -lt 8 ]; then
+    echo "usage: $0 role num_servers num_workers iter batch rate udf bin [args..]"
     exit -1;
 fi
 
