@@ -40,6 +40,7 @@ for part in range(num_part):
                 break
 
 print('generating test data...')
+random.shuffle(samples)
 with open(os.path.join(test_dir, 'part-001'), 'w') as f:
     for i in range(0, part_size):
         f.write(samples[i])
