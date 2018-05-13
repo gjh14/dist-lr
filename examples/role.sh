@@ -4,7 +4,7 @@
 ulimit -c unlimited
 
 if [ $# -lt 4 ]; then
-    echo "usage: $0 role num_servers num_workers bin [args..]"
+    echo "usage: $0 role udf num_servers num_workers bin [args..]"
     exit -1;
 fi
 
@@ -16,10 +16,12 @@ export LEARNING_RATE=0.25
 export TEST_INTERVAL=10
 export SYNC_MODE=0
 export NUM_ITERATION=100
-export BATCH_SIZE=500 # -1 means take all examples in each iteration
+export BATCH_SIZE=100 # -1 means take all examples in each iteration
 
 # worker/server/scheduler settings
 export DMLC_ROLE=$1
+shift
+export UDF=$1
 shift
 export DMLC_NUM_SERVER=$1
 shift

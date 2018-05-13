@@ -39,63 +39,52 @@ private:
   void DataHandle(const ps::KVMeta& req_meta,
                   const ps::KVPairs<Val>& req_data,
                   ps::KVServer<Val>* server) {
-    int key = DecodeKey(req_data.keys[0]);
-    auto& weights = weights_[key];
-
     size_t n = req_data.keys.size();
     if (req_meta.push) {
       CHECK_EQ(n, req_data.vals.size());
-      if (weights.empty()) {
-        std::cout << "Init weight" << std::endl;
-        weights.resize(n);
+      if (weights_.empty()) {
+        std::cout << "Init weight " << n << std::endl;
+        weights_.resize(n);
         for (size_t i = 0; i < n; ++i) {
-          weights[i] = req_data.vals[i];
+          weights_[i] = req_data.vals[i];
         }
         server->Response(req_meta);
       } else if (sync_mode_) {
-        auto& merged = merge_buf_[key];
-        if (merged.vals.empty()) {
-          merged.vals.resize(n, 0);
+        if (merge_buf_.vals.empty()) {
+          merge_buf_.vals.resize(n, 0);
         }
 
         for (size_t i = 0; i < n; ++i) {
-          merged.vals[i] += req_data.vals[i];
+          merge_buf_.vals[req_data.keys[i]] += req_data.vals[i];
         }
 
-        merged.request.push_back(req_meta);
-        if (merged.request.size() == (size_t)ps::NumWorkers()) {
+        merge_buf_.request.push_back(req_meta);
+        if (merge_buf_.request.size() == (size_t)ps::NumWorkers()) {
           // update the weight
           for (size_t i = 0; i < n; ++i) {
-            weights[i] -= learning_rate_ * req_data.vals[i] / merged.request.size();
+            weights_[i] -= learning_rate_ * merge_buf_.vals[i] / merge_buf_.request.size();
           }
-          for (const auto& req : merged.request) {
+          for (const auto& req : merge_buf_.request) {
             server->Response(req);
           }
-          merged.request.clear();
-          merged.vals.clear();
+          merge_buf_.request.clear();
+          merge_buf_.vals.clear();
         }
       } else { // async push
         for (size_t i = 0; i < n; ++i) {
-          weights[i] -= learning_rate_ * req_data.vals[i];
+          weights_[req_data.keys[i]] -= learning_rate_ * req_data.vals[i];
         }
         server->Response(req_meta);
       }
     } else { // pull
-      CHECK(!weights_.empty()) << "init " << key << " first";
-
       ps::KVPairs<Val> response;
       response.keys = req_data.keys;
       response.vals.resize(n);
       for (size_t i = 0; i < n; ++i) {
-        response.vals[i] = weights[i];
+        response.vals[i] = weights_[req_data.keys[i]];
       }
       server->Response(req_meta, response);
     }
-  }
-
-  int DecodeKey(ps::Key key) {
-    auto kr = ps::Postoffice::Get()->GetServerKeyRanges()[ps::MyRank()];
-    return key - kr.begin();
   }
 
   bool sync_mode_;
@@ -106,8 +95,8 @@ private:
     std::vector<Val> vals;
   };
 
-  std::unordered_map<int, std::vector<Val>> weights_;
-  std::unordered_map<int, MergeBuf> merge_buf_;
+  std::vector<Val> weights_;
+  MergeBuf merge_buf_;
   ps::KVServer<float>* ps_server_;
 };
 

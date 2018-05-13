@@ -2,6 +2,7 @@
 #define DISTLR_LR_H_
 
 #include "data_iter.h"
+#include <sys/time.h>
 
 namespace distlr {
 
@@ -39,6 +40,8 @@ private:
   void PullWeight_();
 
   void PushGradient_(const std::vector<float>& grad);
+  
+  void AddTime(timeval& sum, timeval& st, timeval& ed);
 
   int num_feature_dim_;
   float learning_rate_;
@@ -50,6 +53,9 @@ private:
   std::vector<float> weight_;
 
   ps::KVWorker<float>* kv_;
+  
+  float udf_;
+  timeval net_, calc_;
 };
 
 }  // namespace distlr

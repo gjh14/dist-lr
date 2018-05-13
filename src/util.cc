@@ -41,9 +41,14 @@ int ToInt(const std::string& str) {
 
 float ToFloat(const char* str) {
   float integer = 0, decimal = 0;
-  float base = 1;
+  float base = 1, sign = 1;
   const char* p = str;
 
+  if (*p == '-') {
+    sign = -1;
+    ++p;
+  }
+  
   while (*p) {
     if (*p == '.') {
       base = 0.1;
@@ -59,7 +64,7 @@ float ToFloat(const char* str) {
     ++p;
   }
 
-  return integer + decimal;
+  return sign * (integer + decimal);
 }
 
 float ToFloat(const std::string& str) {

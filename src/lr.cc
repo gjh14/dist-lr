@@ -4,37 +4,51 @@
 #include "util.h"
 #include "sample.h"
 #include <ctime>
+#include <fstream>
 #include <iostream>
 #include <iomanip>
-#include <fstream>
 
 namespace distlr {
 
 LR::LR(int num_feature_dim, float learning_rate, float C, int random_state)
    : num_feature_dim_(num_feature_dim), learning_rate_(learning_rate), C_(C),
      random_state_(random_state) {
+  udf_ = distlr::ToFloat(ps::Environment::Get()->find("UDF"));
   InitWeight_();
+  net_.tv_sec = net_.tv_usec = calc_.tv_sec = calc_.tv_usec = 0;
 }
 
 void LR::SetKVWorker(ps::KVWorker<float>* kv) {
   kv_ = kv;
 }
 
+void LR::AddTime(timeval& sum, timeval& st, timeval& ed) {
+  sum.tv_sec += ed.tv_sec - st.tv_sec;
+  sum.tv_usec += ed.tv_usec - st.tv_usec;
+  if (sum.tv_usec >= 1000000) {
+    sum.tv_usec -= 1000000;
+    ++sum.tv_sec;
+  }
+  if (sum.tv_usec < 0) {
+    sum.tv_usec += 1000000;
+    --sum.tv_sec;
+  }
+}
+
 void LR::Train(DataIter& iter, int batch_size = 100) {
+  timeval t0, t1, t2, t3;
   while (iter.HasNext()) {
-    std::vector<Sample> batch = iter.NextBatch(batch_size);
-
+    gettimeofday(&t0, NULL);
     PullWeight_();
-
+    std::vector<Sample> batch = iter.NextBatch(batch_size);
     std::vector<float> grad(weight_.size());
-    
     /* for (size_t i = 0; i < batch.size(); ++i) {
       auto& sample = batch[i];  
       double sig = Sigmoid_(sample.GetFeature());
       for (size_t j = 0; j < weight_.size(); ++j)
         grad[j] += (sig - sample.GetLabel()) * sample.GetFeature(j);
     }*/
-    
+    gettimeofday(&t1, NULL); 
     for (size_t i = 0; i < batch.size(); ++i) {
       auto& sample = batch[i];  
       for (int j = 0; j < 10; ++j) {
@@ -47,10 +61,19 @@ void LR::Train(DataIter& iter, int batch_size = 100) {
           grad[k + j * num_feature_dim_] += (sig - label) * sample.GetFeature(k);
       }
     }
-    
-    for (size_t i = 0; i < weight_.size(); ++i)
+    double maxg = 0;
+    for (size_t i = 0; i < weight_.size(); ++i) {
       grad[i] = grad[i] / batch.size() + C_ * weight_[i] / batch.size();
+      maxg = fabs(grad[i]) > maxg ? fabs(grad[i]) : maxg;
+    }
+    // std::cout << "Grad: " << maxg << std::endl;
+    gettimeofday(&t2, NULL); 
     PushGradient_(grad);
+    gettimeofday(&t3, NULL); 
+    
+    AddTime(net_, t0, t1);
+    AddTime(calc_, t1, t2);
+    AddTime(net_, t2, t3);
   }
 }
 
@@ -95,6 +118,8 @@ void LR::Test(DataIter& iter, int num_iter) {
     << curr_time->tm_min << ':' << std::setw(2) << curr_time->tm_sec
     << " Iteration "<< num_iter << ", accuracy: " << acc / batch.size()
     << ", logloss: "<< loss << std::endl;
+  std::cout << "Net: " << net_.tv_sec << ',' << net_.tv_usec
+    << "\tCalc: " << calc_.tv_sec << ',' << calc_.tv_usec << std::endl;
 }
 
 std::vector<float> LR::GetWeight() {
@@ -154,7 +179,18 @@ void LR::PullWeight_() {
 }
 
 void LR::PushGradient_(const std::vector<float>& grad) {
-  kv_->Wait(kv_->Push(keys_, grad));
+  std::vector<ps::Key> key;
+  std::vector<float> val;
+  for (size_t j = 0; j < grad.size(); ++j)
+    if (fabs(grad[j]) > udf_) {
+      key.push_back(j);
+      val.push_back(grad[j]);
+    }
+  // std::cout << udf_<< " " << key.size() << std::endl;
+  kv_->Wait(kv_->Push(key, val));
+  
+  // kv_->Wait(kv_->Push(keys_, grad));
 }
 
 } // namespace distlr
+
