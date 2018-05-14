@@ -2,6 +2,7 @@
 #define DISTLR_LR_H_
 
 #include "data_iter.h"
+#include <cstdio>
 #include <sys/time.h>
 
 namespace distlr {
@@ -11,6 +12,8 @@ public:
   explicit LR(int num_feature_dim, float learning_rate=0.001, float C_=1,
               int random_state=0);
   virtual ~LR() {
+    if (file)
+      fclose(file);
     if (kv_) {
       delete kv_;
     }
@@ -18,7 +21,7 @@ public:
 
   void SetKVWorker(ps::KVWorker<float>* kv);
 
-  void Train(DataIter& iter, int num_iter);
+  void Train(DataIter& iter, int num_iter, int batch_size);
 
   void Test(DataIter& iter, int num_iter);
 
@@ -39,7 +42,7 @@ private:
 
   void PullWeight_();
 
-  void PushGradient_(const std::vector<float>& grad);
+  void PushGradient_(const std::vector<float>& grad, int num_iter);
   
   void AddTime(timeval& sum, timeval& st, timeval& ed);
 
@@ -55,7 +58,8 @@ private:
   ps::KVWorker<float>* kv_;
   
   float udf_;
-  timeval net_, calc_;
+  timeval net_, calc_, start_;
+  FILE *file;
 };
 
 }  // namespace distlr

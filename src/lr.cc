@@ -16,6 +16,8 @@ LR::LR(int num_feature_dim, float learning_rate, float C, int random_state)
   udf_ = distlr::ToFloat(ps::Environment::Get()->find("UDF"));
   InitWeight_();
   net_.tv_sec = net_.tv_usec = calc_.tv_sec = calc_.tv_usec = 0;
+  file = ps::MyRank() == 0 ? fopen("log/log", "w") : NULL;
+  gettimeofday(&start_, NULL); 
 }
 
 void LR::SetKVWorker(ps::KVWorker<float>* kv) {
@@ -35,11 +37,15 @@ void LR::AddTime(timeval& sum, timeval& st, timeval& ed) {
   }
 }
 
-void LR::Train(DataIter& iter, int batch_size = 100) {
+void LR::Train(DataIter& iter, int num_iter, int batch_size = 100) {
   timeval t0, t1, t2, t3;
+  int acc = 0;
+  double loss = 0;
   while (iter.HasNext()) {
     gettimeofday(&t0, NULL);
     PullWeight_();
+    gettimeofday(&t1, NULL); 
+    
     std::vector<Sample> batch = iter.NextBatch(batch_size);
     std::vector<float> grad(weight_.size());
     /* for (size_t i = 0; i < batch.size(); ++i) {
@@ -48,9 +54,11 @@ void LR::Train(DataIter& iter, int batch_size = 100) {
       for (size_t j = 0; j < weight_.size(); ++j)
         grad[j] += (sig - sample.GetLabel()) * sample.GetFeature(j);
     }*/
-    gettimeofday(&t1, NULL); 
+    
     for (size_t i = 0; i < batch.size(); ++i) {
-      auto& sample = batch[i];  
+      auto& sample = batch[i];
+      int res = -1;
+      double val = 0;
       for (int j = 0; j < 10; ++j) {
         int label = (sample.GetLabel() == j);
         double sig = 0;
@@ -59,21 +67,33 @@ void LR::Train(DataIter& iter, int batch_size = 100) {
         sig = 1 / (1 + exp(-sig));
         for (int k = 0; k < num_feature_dim_; ++k)
           grad[k + j * num_feature_dim_] += (sig - label) * sample.GetFeature(k);
+        if (sig > val) {
+          val = sig;
+          res = j;
+        }
+        loss += label * log(sig) + (1 - label) * log(1 - sig); 
       }
+      acc += res == sample.GetLabel(); 
     }
-    double maxg = 0;
-    for (size_t i = 0; i < weight_.size(); ++i) {
+    for (size_t i = 0; i < weight_.size(); ++i) 
       grad[i] = grad[i] / batch.size() + C_ * weight_[i] / batch.size();
-      maxg = fabs(grad[i]) > maxg ? fabs(grad[i]) : maxg;
-    }
-    // std::cout << "Grad: " << maxg << std::endl;
+
     gettimeofday(&t2, NULL); 
-    PushGradient_(grad);
+    PushGradient_(grad, num_iter);
     gettimeofday(&t3, NULL); 
     
     AddTime(net_, t0, t1);
     AddTime(calc_, t1, t2);
     AddTime(net_, t2, t3);
+  }
+  
+  if (ps::MyRank() == 0) {
+    timeval inv = {0, 0};
+    AddTime(inv, start_, t3);
+    fprintf(file, "%d %.6lf %.6lf ", num_iter, (double)acc / iter.size(), loss);
+    fprintf(file, "%ld.%06ld %ld.%06ld %ld.%06ld\n", inv.tv_sec, inv.tv_usec, net_.tv_sec, net_.tv_usec, calc_.tv_sec, calc_.tv_usec);
+    if (num_iter % 10 == 0)
+      printf("Iter: %d, Acc: %.6lf, Loss: %.6lf\n", num_iter, (double)acc / iter.size(), loss);
   }
 }
 
@@ -178,11 +198,12 @@ void LR::PullWeight_() {
   kv_->Wait(kv_->Pull(keys_, &weight_));
 }
 
-void LR::PushGradient_(const std::vector<float>& grad) {
+void LR::PushGradient_(const std::vector<float>& grad, int num_iter) {
   std::vector<ps::Key> key;
   std::vector<float> val;
+  double lim = udf_ / sqrt(num_iter);
   for (size_t j = 0; j < grad.size(); ++j)
-    if (fabs(grad[j]) > udf_) {
+    if (fabs(grad[j]) > lim) {
       key.push_back(j);
       val.push_back(grad[j]);
     }

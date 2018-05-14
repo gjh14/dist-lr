@@ -12,12 +12,12 @@ fi
 export RANDOM_SEED=10
 export DATA_DIR=./digit
 export NUM_FEATURE_DIM=784
-export LEARNING_RATE=0.25
+export LEARNING_RATE=0.01
 export TEST_INTERVAL=10
 export SYNC_MODE=0
 export NUM_ITERATION=50
-export BATCH_SIZE=-1 # -1 means take all examples in each iteration
-export UDF=-1
+export BATCH_SIZE=50 # -1 means take all examples in each iteration
+export UDF=0.01
 
 # worker/server/scheduler settings
 export DMLC_NUM_SERVER=$1

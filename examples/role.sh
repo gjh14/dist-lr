@@ -51,8 +51,11 @@ then
     export HEAPPROFILE=./W${i}
 fi
 
-sudo iftop -i br-flat-lan-1 -t > log &
+mkdir log
+sudo iftop -i br-flat-lan-1 -t > iftop &
+ping -t -i 1 10.11.10.1 > log/ping &
 ${bin} ${arg}
 ps aux | grep "iftop" |grep -v grep| cut -c 9-15 | xargs sudo kill -9
+ps aux | grep "ping" |grep -v grep| cut -c 9-15 | xargs sudo kill -9
 wait
 

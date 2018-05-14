@@ -47,5 +47,6 @@
 /examples/digit/test
 /examples/digit/train
 /examples/core
+/examples/iftop
 /examples/log
 /zeromq-4.2.3

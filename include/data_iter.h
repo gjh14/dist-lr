@@ -72,6 +72,10 @@ public:
     return !round_end_;
   }
 
+  int size() {
+    return samples_.size();
+  }
+  
 private:
   std::string filename_;
   int num_feature_dim_;

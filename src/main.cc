@@ -135,20 +135,20 @@ void RunWorker() {
   std::cout << "Worker[" << rank << "]: start working..." << std::endl;
   int num_iteration = distlr::ToInt(ps::Environment::Get()->find("NUM_ITERATION"));
   int batch_size = distlr::ToInt(ps::Environment::Get()->find("BATCH_SIZE"));
-  int test_interval = distlr::ToInt(ps::Environment::Get()->find("TEST_INTERVAL"));
+  // int test_interval = distlr::ToInt(ps::Environment::Get()->find("TEST_INTERVAL"));
 
   for (int i = 0; i < num_iteration; ++i) {
     static std::string filename = root + "/train/part-00" + std::to_string(rank + 1);
     static distlr::DataIter iter(filename, num_feature_dim);
     iter.Init();
-    lr.Train(iter, batch_size);
+    lr.Train(iter, i + 1, batch_size);
 
-    if (rank == 0 and (i + 1) % test_interval == 0) {
+    /* if (rank == 0 and (i + 1) % test_interval == 0) {
       static std::string filename = root + "/test/part-001";
       static distlr::DataIter test_iter(filename, num_feature_dim);
       test_iter.Init();
       lr.Test(test_iter, i + 1);
-    }
+    } */
   }
   std::string modelfile = root + "/models/part-00" + std::to_string(rank + 1);
   lr.SaveModel(modelfile);
