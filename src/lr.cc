@@ -85,6 +85,12 @@ void LR::Train(DataIter& iter, int num_iter, int batch_size = 100) {
     AddTime(net_, t0, t1);
     AddTime(calc_, t1, t2);
     AddTime(net_, t2, t3);
+
+    if (ps::MyRank() == 0) {
+      timeval inv = {0, 0};
+      AddTime(inv, t2, t3);
+      fprintf(file, "%ld.%06ld\n", inv.tv_sec, inv.tv_usec);
+    }
   }
   
   if (ps::MyRank() == 0) {
