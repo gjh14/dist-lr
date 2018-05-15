@@ -59,6 +59,7 @@ private:
   
   float udf_;
   timeval net_, calc_, start_;
+  int ping;
   FILE *file;
 };
 

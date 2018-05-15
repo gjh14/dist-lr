@@ -17,6 +17,7 @@ LR::LR(int num_feature_dim, float learning_rate, float C, int random_state)
   InitWeight_();
   net_.tv_sec = net_.tv_usec = calc_.tv_sec = calc_.tv_usec = 0;
   file = ps::MyRank() == 0 ? fopen("log/log", "w") : NULL;
+  ping = 0;
   gettimeofday(&start_, NULL); 
 }
 
@@ -86,11 +87,10 @@ void LR::Train(DataIter& iter, int num_iter, int batch_size = 100) {
     AddTime(calc_, t1, t2);
     AddTime(net_, t2, t3);
 
-    if (ps::MyRank() == 0) {
-      timeval inv = {0, 0};
-      AddTime(inv, t2, t3);
-      fprintf(file, "%ld.%06ld\n", inv.tv_sec, inv.tv_usec);
-    }
+    int inv = t3.tv_usec - t2.tv_usec;
+    if (inv < 0)
+      inv += 100000;
+    ping = (ping + inv) >> 1;
   }
   
   if (ps::MyRank() == 0) {
@@ -207,7 +207,8 @@ void LR::PullWeight_() {
 void LR::PushGradient_(const std::vector<float>& grad, int num_iter) {
   std::vector<ps::Key> key;
   std::vector<float> val;
-  double lim = udf_; // udf_ / sqrt(num_iter);
+  // double lim = udf_ / sqrt(num_iter);
+  double lim = (ping < 1000 ? 0.01 : 0.05) / sqrt(num_iter);
   for (size_t j = 0; j < grad.size(); ++j)
     if (fabs(grad[j]) > lim) {
       key.push_back(j);
