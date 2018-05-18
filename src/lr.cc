@@ -207,9 +207,9 @@ void LR::PullWeight_() {
 void LR::PushGradient_(const std::vector<float>& grad, int num_iter) {
   std::vector<ps::Key> key;
   std::vector<float> val;
-  double lim = udf_;
+  // double lim = udf_;
   // double lim = udf_ / sqrt(num_iter);
-  // double lim = (ping < 1000 ? 0.01 : 0.05) / sqrt(num_iter);
+  double lim = (ping < 500 ? 0.01 : 0.05) / sqrt(num_iter);
   for (size_t j = 0; j < grad.size(); ++j)
     if (fabs(grad[j]) > lim) {
       key.push_back(j);
