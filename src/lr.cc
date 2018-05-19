@@ -82,8 +82,8 @@ void LR::Train(DataIter& iter, int num_iter, int batch_size = 100) {
       grad[i] = grad[i] / batch.size() + C_ * weight_[i] / batch.size();
       mx = grad[i] > mx ? grad[i] : mx;
     }
-    if (ps::MyRank() == 0)
-      fprintf(file, "%.6lf\n", mx);    
+    /* if (ps::MyRank() == 0)
+      fprintf(file, "%.6lf\n", mx); */
 
     gettimeofday(&t2, NULL); 
     PushGradient_(grad, num_iter);
@@ -214,8 +214,8 @@ void LR::PushGradient_(const std::vector<float>& grad, int num_iter) {
   std::vector<ps::Key> key;
   std::vector<float> val;
   // double lim = udf_;
-  double lim = udf_ / sqrt(num_iter);
-  // double lim = (ping < 400 ? 0.01 : 0.05) / sqrt(num_iter);
+  // double lim = udf_ / sqrt(num_iter);
+  double lim = (ping < 400 ? 0.01 : 0.02) / sqrt(num_iter);
   for (size_t j = 0; j < grad.size(); ++j)
     if (fabs(grad[j]) > lim) {
       key.push_back(j);
