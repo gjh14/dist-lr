@@ -76,8 +76,13 @@ void LR::Train(DataIter& iter, int num_iter, int batch_size = 100) {
       }
       acc += res == sample.GetLabel(); 
     }
-    for (size_t i = 0; i < weight_.size(); ++i) 
+
+    double mx = 0;
+    for (size_t i = 0; i < weight_.size(); ++i) {
       grad[i] = grad[i] / batch.size() + C_ * weight_[i] / batch.size();
+      mx = grad[i] > mx ? grad[i] : mx;
+    }
+    fprintf(file, "%.6lf\n", mx);    
 
     gettimeofday(&t2, NULL); 
     PushGradient_(grad, num_iter);
